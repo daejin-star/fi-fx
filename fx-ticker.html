@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+    {
+      "symbols": [
+        { "proName": "FX:KRWUSD", "title": "원/달러" },
+        { "proName": "FX:KRWEUR", "title": "원/유로" },
+        { "proName": "FX:KRWGBP", "title": "원/파운드" },
+        { "proName": "FX:KRWCAD", "title": "원/캐나다달러" },
+        { "proName": "FX:KRWJPY", "title": "원/엔" }
+      ],
+      "showSymbolLogo": true,
+      "isTransparent": false,
+      "displayMode": "adaptive",
+      "colorTheme": "light",
+      "locale": "kr"
+    }
+    </script>
+  </div>
+</body>
+</html>
