@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #ffffff; height: 100px; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    .ticker-wrap {
+      width: 100%;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border-top: 1px solid #e8e8e8;
+      border-bottom: 1px solid #e8e8e8;
+      overflow: hidden;
+    }
+
+    .ticker-label {
+      background: #1e3a5f;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 0 12px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+
+    .ticker-track-wrap {
+      overflow: hidden;
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .ticker-track {
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      animation: scroll 35s linear infinite;
+    }
+    .ticker-track:hover { animation-play-state: paused; }
+
+    @keyframes scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 20px;
+      height: 100px;
+      border-right: 1px solid #f0f0f0;
+    }
+
+    .ticker-name {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .ticker-rate {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .ticker-change {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .up   { color: #00897b; }
+    .down { color: #e53935; }
+    .neutral { color: #999; }
+
+    .updated {
+      font-size: 10px;
+      color: #bbb;
+      padding: 0 14px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .loading { color: #aaa; font-size: 12px; padding: 0 20px; }
+  </style>
+</head>
+<body>
+  <div class="ticker-wrap">
+    <div class="ticker-label">LIVE FX</div>
+    <div class="ticker-track-wrap">
+      <div class="ticker-track" id="track">
+        <span class="loading">로딩 중...</span>
+      </div>
+    </div>
+    <div class="updated" id="updated"></div>
+  </div>
+
+  <script>
+    const pairs = [
+      { code: 'USD', name: 'USD/KRW', color: '#1565c0' },
+      { code: 'EUR', name: 'EUR/KRW', color: '#6a1b9a' },
+      { code: 'GBP', name: 'GBP/KRW', color: '#ad1457' },
+      { code: 'CAD', name: 'CAD/KRW', color: '#e65100' },
+      { code: 'JPY', name: 'JPY/KRW', color: '#2e7d32' },
+    ];
+
+    let prevRates = {};
+
+    function buildItems(rates) {
+      const items = pairs.map(p => {
+        const rate = rates[p.code];
+        if (!rate) return '';
+        const prev = prevRates[p.code] || rate;
+        const change = rate - prev;
+        const changePct = prev ? ((change / prev) * 100) : 0;
+        const cls = change > 0 ? 'up' : change < 0 ? 'down' : 'neutral';
+        const sign = change > 0 ? '+' : '';
+        const arrow = change > 0 ? '▲' : change < 0 ? '▼' : '–';
+        const fmt = p.code === 'JPY' ? rate.toFixed(4) : Math.round(rate).toLocaleString();
+        return `<div class="ticker-item">
+          <span class="ticker-name" style="color:${p.color}">${p.name}</span>
+          <span class="ticker-rate">${fmt}</span>
+          <span class="ticker-change ${cls}">${arrow} ${sign}${changePct.toFixed(2)}%</span>
+        </div>`;
+      }).join('');
+      return items + items;
+    }
+
+    async function fetchRates() {
+      try {
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/KRW');
+        const data = await res.json();
+        const rates = {};
+        pairs.forEach(p => { rates[p.code] = 1 / data.rates[p.code]; });
+        document.getElementById('track').innerHTML = buildItems(rates);
+        const now = new Date();
+        document.getElementById('updated').textContent =
+          `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} 기준`;
+        prevRates = { ...rates };
+      } catch (e) {
+        document.getElementById('track').innerHTML = '<span class="loading">데이터를 불러올 수 없습니다</span>';
+      }
+    }
+
+    fetchRates();
+    setInterval(fetchRates, 60000);
+  </script>
+</body>
+</html>
